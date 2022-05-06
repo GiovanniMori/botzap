@@ -218,25 +218,36 @@ function start(client) {
             client.sendText(message.from, (`Desculpe, não entendi\n\nDigite:\n*1-* ✅ Sim \n*2-* ❌ Não, voltar ao menu`));
         } else if ((mensagem.includes("produto") || message.body == "2") == true) {
             client
-                .sendText(
-                    message.from,
+                .sendText(message.from,
                     `Hambúrguer\nHambúrguer com Gergilim\nHambúrguer Especial\nHambúrguer Especial com Gergilim\nHot Dog\nBaguete\nMini Doguinho 7x7(49 Unid)\nBisnaguinha com 60 Unidades\nHamburgão com 6 Unidades\nHamburgão com 2 Unidades\nPão de Metro\nPão para Bolo Salgado\nMini Francês\nPão de Lanche\nPão de Banha`)
+                .then((result) => {
+                    //console.log("Result: ", result); //retorna um objeto de successo
+                })
+                .catch((erro) => {
+                    console.error("Erro ao enviar Produtos: ", erro); //return um objeto de erro
+                });
             await sleep(1000);
-            client.sendText(message.from, (`Digite:\n*1-* 🛒 Fazer Pedido  \n*2-* 🍞 Ver Produtos\n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`));
-        } else if ((mensagem.includes("endereco") || mensagem.includes("endereço") || message.body == "3") == true && status != 30) {
+            client.sendText(message.from, (`Digite:\n*1-* 🛒 Fazer Pedido  \n*2-* 🍞 Ver Produtos\n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`))
+                .then((result) => {
+                    //console.log("Result: ", result); //retorna um objeto de successo
+                })
+                .catch((erro) => {
+                    console.error("Erro ao enviar menu produtos dnv: ", erro); //return um objeto de erro
+                });
+        } else if ((mensagem.includes("endereco") || mensagem.includes("endereço") || message.body == "3") == true && status != 4) {
             client
                 .sendText(
                     message.from, "Insira seu endereço:\n(ex: Rua Santa Bárbara 670, Vila Aparecida)"
                 )
                 .then((result) => {
-                    setStatus(user, 30);
+                    setStatus(user, 4);
                     //console.log("Result: ", result); //retorna um objeto de successo
                 })
                 .catch((erro) => {
                     console.error("Erro ao enviar mensagem: ", erro); //return um objeto de erro
                 });
         }
-        else if (((mensagem.includes("ajuda") || message.body == "4") == true) && status != 30) {
+        else if (((mensagem.includes("ajuda") || message.body == "4") == true) && status != 4) {
             client
                 .sendText(message.from, "Caso não tenha entendido como o bot funciona, basta digitar o número da opção que deseja, ou o texto digitado, se ainda precisar de ajuda com algum produto, basta nos ligar 😊.")
                 .then((result) => {
@@ -254,7 +265,7 @@ function start(client) {
                 .catch((erro) => {
                     console.error("Erro Ajuda: ", erro); //return um objeto de erro
                 });
-        } else if ((status) == 30) {
+        } else if ((status) == 4) {
             client
                 .sendText(message.from, "Seu endereço foi salvo com sucesso!")
                 .then((result) => {
@@ -273,6 +284,10 @@ function start(client) {
                     console.error("Erro ao enviar mensagem: ", erro); //return um objeto de erro
                 });
         }
+
+
+
+
 
 
 
