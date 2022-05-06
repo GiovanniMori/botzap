@@ -16,7 +16,7 @@ const createConnection = async () => {
 const createUser = async (name, msgfrom) => {
     const connection = await createConnection();
     const [rows] = await connection.execute(
-        'INSERT INTO cliente (nome, endereco, status, telefone, pedido) VALUES (?, "", "0", ? ,"")', [name, msgfrom]);
+        'INSERT INTO cliente (nome, endereco, status, telefone, pedido) VALUES (?, "inserir", "0", ? ,"")', [name, msgfrom]);
     if (rows.length > 0) return true;
     return false;
 };
@@ -110,9 +110,11 @@ function start(client) {
         if (message.isGroupMsg === true) { return; }
 
         if (message.type != "chat") {
-            client.sendText(message.from,
-                `😕 Desculpa, eu ainda não consigo entender este tipo de mensagem.Vou te mostrar novamente os assuntos que já aprendi, fica mais fácil pra mim se você escolher uma das opções:\nDigite:\n*1-* 🛒 Fazer Pedido  \n*2-* 🍞 Ver Produtos \n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`
-            )
+            client.sendText(message.from, `😕 Desculpa, eu ainda não consigo entender este tipo de mensagem.Vou te mostrar novamente os assuntos que já aprendi, fica mais fácil pra mim se você escolher uma das opções:\nDigite:\n*1-* 🛒 Fazer Pedido  \n*2-* 🍞 Ver Produtos \n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`)
+                .then((result) => {
+                }).catch((erro) => {
+                    console.error("Erro ao ler !=texto ", erro); //return um objeto de erro
+                });
             return;
         }
 
@@ -131,10 +133,10 @@ function start(client) {
             const getDia = await getData(user);
             dia = getDia;
         } catch {
-            console.log("Não Pegou no DataBase");
+            console.log();
         }
 
-        if ((endereco == false && endereco != "")) {
+        if ((endereco == false && endereco != "inserir")) {
             createUser(message.sender.pushname, user);
             try {
                 const getUserStatus = await getStatus(user);
@@ -148,29 +150,15 @@ function start(client) {
         const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
         await sleep(500);
 
-        if ((mensagem.includes("olá") ||
-            mensagem.includes("oi") ||
-            mensagem.includes("olá") ||
-            mensagem.includes("ola") ||
-            mensagem.includes("tarde") ||
-            mensagem.includes("noite") ||
-            mensagem.includes("dia") ||
-            mensagem.includes("boa") == true)) {
-            client.sendText(message.from,
-                `Olá, ${message.sender.pushname}\nDigite:\n*1-* 🛒 Fazer Pedido\n*2-* 🍞 Ver Produtos\n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`).then((result) => {
-                    //setStatus(user, "0");
-                })
-                .catch((erro) => {
-                    console.error("Erro Welcome msg ", erro); //return um objeto de erro
-                });
-        } else if ((mensagem.includes("pedido") || message.body == "1") == true) {
+
+        if ((mensagem.includes("pedido") || message.body == "1") == true && status == "0") {
             client.sendText(message.from, "Digite seu pedido:")
                 .then((result) => {
                     setStatus(user, "1");
                 }).catch((erro) => {
                     console.error("Erro ao fazer pedido(1): ", erro); //return um objeto de erro
                 });
-        } else if (status == 1 && endereco == "") {
+        } else if (status == 1 && endereco == "inserir") {
             client
                 .sendText(message.from, ("Qual o local para entrega?\n(ex: Rua Santa Bárbara 670, Vila Aparecida)"))
                 .then((result) => {
@@ -179,7 +167,7 @@ function start(client) {
                 }).catch((erro) => {
                     console.error("Erro ao setar pedido: ", erro); //return um objeto de erro
                 });
-        } else if (status == 1 && endereco != "") {
+        } else if (status == 1 && endereco != "inserir") {
             setPedido(user, message.body)
             client.sendText(message.from, (`*Seu pedido:*\n${message.body}\n*Endereço:*\n${endereco}\n*Está correto?*\nDigite:\n*1-* ✅ Sim \n*2-* ❌ Não, voltar ao menu`))
                 .then((result) => {
@@ -201,6 +189,12 @@ function start(client) {
             client.sendText(message.from, (`Seu pedido foi anotado, obrigado pela preferência ${message.sender.pushname}. ☺️`))
                 .then((result) => {
                     setStatus(user, "0");
+                    client.sendText("5511960575067@c.us", `Novo Pedido de *${message.sender.pushname}*\n\n*Pedido*: ${pedido}\n*Local*: ${endereco}`)
+                        .then((result) => {
+                        })
+                        .catch((erro) => {
+                            console.error("Erro ao salvar pedido: ", erro); //return um objeto de erro
+                        });
                     //createPedido(message.sender.pushname, pedido, 0, "2022 - 04 - 30")
                 })
                 .catch((erro) => {
@@ -211,8 +205,16 @@ function start(client) {
                 .then((result) => {
                     setStatus(user, "0");
                 })
+                .catch((erro) => {
+                    console.error("Erro ao cancelar pedido: ", erro); //return um objeto de erro
+                });
             await sleep(500);
-            client.sendText(message.from, (`Digite:\n*1-* 🛒 Fazer Pedido  \n*2-* 🍞 Ver Produtos \n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`));
+            client.sendText(message.from, (`Digite:\n*1-* 🛒 Fazer Pedido  \n*2-* 🍞 Ver Produtos \n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`)).then((result) => {
+                setStatus(user, "0");
+            })
+                .catch((erro) => {
+                    console.error("Erro ao cancelar pedidoMenu: ", erro); //return um objeto de erro
+                });
         }
         else if (status == 3) {
             client.sendText(message.from, (`Desculpe, não entendi\n\nDigite:\n*1-* ✅ Sim \n*2-* ❌ Não, voltar ao menu`));
@@ -226,7 +228,7 @@ function start(client) {
                 .catch((erro) => {
                     console.error("Erro ao enviar Produtos: ", erro); //return um objeto de erro
                 });
-            await sleep(1000);
+            await sleep(5000);
             client.sendText(message.from, (`Digite:\n*1-* 🛒 Fazer Pedido  \n*2-* 🍞 Ver Produtos\n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`))
                 .then((result) => {
                     //console.log("Result: ", result); //retorna um objeto de successo
@@ -258,7 +260,7 @@ function start(client) {
         } else if (((mensagem.includes("creditos") || mensagem.includes("créditos") || message.body == "5") == true) && status != 30) {
             client
                 .sendText(
-                    message.from, "Feito por Giovanni Mori\nTelefone: *11 95320-7250*\nEmail: *giovanni_mori@hotmail.com*")
+                    message.from, "Feito por Giovanni Mori\nTelefone: *1195320-7250*\nEmail: *giovanni_mori@hotmail.com*")
                 .then((result) => {
                     //console.log("Result: ", result); //retorna um objeto de successo
                 })
@@ -272,6 +274,21 @@ function start(client) {
                 })
                 .catch((erro) => {
                     console.error("Erro ao atualizar endereço: ", erro); //return um objeto de erro
+                });
+        } else if ((mensagem.includes("olá") ||
+            mensagem.includes("oi") ||
+            mensagem.includes("olá") ||
+            mensagem.includes("ola") ||
+            mensagem.includes("tarde") ||
+            mensagem.includes("noite") ||
+            mensagem.includes("dia") ||
+            mensagem.includes("boa") == true)) {
+            client.sendText(message.from,
+                `Olá, ${message.sender.pushname}\nDigite:\n*1-* 🛒 Fazer Pedido\n*2-* 🍞 Ver Produtos\n*3-* 📍 Atualizar Endereço\n*4-* ℹ️ Ajuda\n*5-* 🔗 Créditos`).then((result) => {
+                    //setStatus(user, "0");
+                })
+                .catch((erro) => {
+                    console.error("Erro Welcome msg ", erro); //return um objeto de erro
                 });
         } else {
             client
